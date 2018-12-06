@@ -1,4 +1,0 @@
-#Mon Dec 03 15:42:14 MSK 2018
-base.0=E\:\\Projects\\XO\\Temp\\gradleOut\\build\\intermediates\\transforms\\dex\\release\\0
-path.0=classes.dex
-renamed.0=classes.dex
