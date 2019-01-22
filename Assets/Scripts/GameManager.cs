@@ -5,10 +5,10 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Zenject;
 
 public class GameManager : MonoBehaviour {
 	
-	public static GameManager Instance { get; private set; }
 	public GameObject RestartButton;
 	
 	[NonSerialized]
@@ -22,17 +22,11 @@ public class GameManager : MonoBehaviour {
 	private int _oPoints;
 	private int _round;
 	private bool _end;
-	
-	private void Awake()
+
+	[Inject]
+	public void Construct(BoardManager boardScript)
 	{
-		if (Instance == null)
-		{
-			Instance = this;	
-		}			
-		else
-		{
-			Destroy(gameObject);
-		}
+		_boardScript = boardScript;
 	}
 
 	private void Start ()
@@ -43,13 +37,15 @@ public class GameManager : MonoBehaviour {
 		_oPointsText = GameObject.Find("OPointsText").GetComponent<Text>();
 		_winText = GameObject.Find("WinText").GetComponent<Text>();
 		_winText.text = "";
+		RestartButton = GameObject.Find("ButtonRestart");
+		RestartButton.SetActive(false);
 	}
 
 	public void Update ()
 	{
 		if (_end)
 		{
-			RestartButton.SetActive(true);
+			RestartButton.gameObject.SetActive(true);
 			_end = false;
 		}
 		if (Input.GetKey("q"))
@@ -127,7 +123,7 @@ public class GameManager : MonoBehaviour {
 		}
 		else
 		{
-			BoardManager.Instance.BotPlays();
+			_boardScript.BotPlays();
 			Turn = true;
 		}
 	}

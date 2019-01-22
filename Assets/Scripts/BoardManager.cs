@@ -3,12 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Zenject;
 using Random = UnityEngine.Random;
 
 public class BoardManager: MonoBehaviour
 {
-
-	public static BoardManager Instance { get; private set; }
 	public GameObject Frame;
 	public GameObject O;
 	public GameObject[] Lines;
@@ -23,21 +22,19 @@ public class BoardManager: MonoBehaviour
 	private GameManager _gameScript; 
 	private List<GridStatus> _grid = new List<GridStatus>();
 
-	private void Awake()
+	PlayerClick.Factory _playerClickFactory;
+
+
+	[Inject]
+	public void Construct(GameManager gameScript,PlayerClick.Factory enemyFactory)
 	{
-		if (Instance == null)
-		{
-			Instance = this;	
-		}			
-		else
-		{
-			Destroy(gameObject);
-		}
+		_gameScript = gameScript;
+		_playerClickFactory = enemyFactory;
 	}
+	
 
 	private void Start ()
 	{
-		_gameScript = GetComponent<GameManager>();
 		BuildGrid();
 		BuildBoard();
 	}
@@ -60,6 +57,7 @@ public class BoardManager: MonoBehaviour
 		{
 			OpenNewCells();
 			_gameScript.ClearRound();
+			
 		}
 	}
 
@@ -73,8 +71,7 @@ public class BoardManager: MonoBehaviour
 			for (int y = 5; y <= StartRows + 4; y++)
 			{
 				_grid.First(d => d.isX ==  x & d.isY == y).isEmpty = "empty";
-				GameObject instance = Instantiate(Frame, new Vector2(x,y),Quaternion.identity) as GameObject;
-				instance.transform.SetParent(_board);
+				_playerClickFactory.Create(x,y);
 			}
 		}
 	}
@@ -102,6 +99,7 @@ public class BoardManager: MonoBehaviour
 		for (int i=0;  i < endGridX.Count; i++)
 		{
 			_gameScript.AddPoints("X1");
+		
 		}
 		var endGridO = _grid.FindAll(s => s.isEmpty == "O");
 		for (int i=0;  i < endGridO.Count; i++)
@@ -116,14 +114,12 @@ public class BoardManager: MonoBehaviour
 		for (int i = 1; i <= OpenCells; i++)
 		{
 			var openGrid = _grid.FindAll(s => s.isEmpty == "hide");
-			//Debug.Log(openGrid.Count);
 			if(openGrid.Count != 0)
 			{
 				int randomCell = Random.Range(0, openGrid.Count);
 				var openCell = openGrid[randomCell];
 				_grid.First(d => d.isX == openCell.isX & d.isY == openCell.isY).isEmpty = "empty";
-				GameObject instance = Instantiate(Frame, new Vector2(openCell.isX,openCell.isY),Quaternion.identity) as GameObject;
-				instance.transform.SetParent(_board);
+				_playerClickFactory.Create(openCell.isX,openCell.isY);
 			}
 		}
 	}
@@ -138,6 +134,7 @@ public class BoardManager: MonoBehaviour
 	{
 		_grid.First(d => d.isX ==  curX & d.isY == curY).isEmpty = status + "pointed";
 		_gameScript.AddPoints(status);
+		
 		switch (lineStatus)
 		{
 			//horizontal line
@@ -159,7 +156,6 @@ public class BoardManager: MonoBehaviour
 				break;
 		}
 		Instantiate(_line,new Vector2(curX, curY),Quaternion.identity);
-		//Debug.Log( "X: " + curX + " Y: " + curY  + " pointed for " +  status);
 	}
 	
 	#region Check cell in the grid for win points
@@ -171,7 +167,6 @@ public class BoardManager: MonoBehaviour
 			// Edit one grid 
 			_grid.First(d => d.isX == currentX & d.isY == currentY).isEmpty = currentStatus;
 			_gameScript.AddRound();
-			//Debug.Log(currentX +" и " + currentY + " and " + currentStatus);
 		}
 		
 		if (CheckCell(currentStatus, currentX - 1, currentY + 1))
